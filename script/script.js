@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const burgerBtn = document.getElementById('burger');
   const prevBtn = document.getElementById('prev');
   const nextBtn = document.getElementById('next');
+  const sendBtn = document.getElementById('send');
 
 
   const questions = [
@@ -121,12 +122,10 @@ document.addEventListener('DOMContentLoaded', function() {
     modalBlock.classList.add('d-block');
     playTest();
   })
-  
   closeModal.addEventListener('click', () => {
     modalBlock.classList.remove('d-block');
     burgerBtn.classList.remove('active');
   })
-  
   document.addEventListener('click', function(event) {
     if (
       !event.target.closest('.modal-dialog') &&
@@ -138,7 +137,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   })
 
+
   const playTest = () => {
+
+    const finalAnswers = [];
 
     let numberQuestion = 0;
 
@@ -146,10 +148,10 @@ document.addEventListener('DOMContentLoaded', function() {
       questions[index].answers.forEach((answer) => {
         const answerItem = document.createElement('div');
 
-        answerItem.classList.add('answers-item', 'd-flex', 'flex-column');
+        answerItem.classList.add('answers-item', 'd-flex', 'justify-content-center');
 
         answerItem.innerHTML = `
-        <input type="${questions[index].type}" id="${answer.id}" name="answer" class="d-none">
+        <input type="${questions[index].type}" id="${answer.id}" name="answer" class="d-none" value="${answer.title}">
         <label for="${answer.id}" class="d-flex flex-column justify-content-between">
           <img class="answerImg" src="${answer.url}" alt="burger">
           <span>${answer.title}</span>
@@ -162,25 +164,70 @@ document.addEventListener('DOMContentLoaded', function() {
     const renderQuestions = (indexQuestion) => {
       formAnswers.innerHTML = '';
 
-      if (numberQuestion <= 0) {
-        prevBtn.style.display = 'none';
-      } else {
-        prevBtn.style.display = '';
+      switch (true) {
+        case (numberQuestion >= 0 && numberQuestion <= questions.length - 1):
+        // if (numberQuestion >= 0 && numberQuestion <= questions.length - 1) {
+          questionTitle.textContent = `${questions[indexQuestion].question}`;
+          renderAnswers(indexQuestion);
+          nextBtn.classList.remove('d-none');
+          prevBtn.classList.remove('d-none');
+          sendBtn.classList.add('d-none');
+          break;
+          // }
+          // if (numberQuestion === 0) {
+        case (numberQuestion === 0):
+          prevBtn.classList.add('d-none');
+          break;
+        // }
+        // if (numberQuestion === questions.length) {
+        case (numberQuestion === questions.length):
+          prevBtn.classList.add('d-none');
+          nextBtn.classList.add('d-none');
+          sendBtn.classList.remove('d-none');
+          questionTitle.textContent= '';
+          formAnswers.innerHTML= `
+          <div class="form-group">
+          <label for="numberPhone">Ввеите свой номер телефона</label>
+          <input type="tel" class="form-control" id="numberPhone" placeholder="+7(xxx)xxx-xx-xx" required>
+          </div>
+          `;
+          break;
+        // }
+        // if (numberQuestion === questions.length+1) {
+        case (numberQuestion === questions.length+1):
+          formAnswers.textContent= 'Спасибо!';
+          sendBtn.classList.add('d-none');
+          setTimeout(() => {
+            modalBlock.classList.remove('d-block');
+          }, 2000);
+          break;
+        // }
+        default: 
+          break;
       }
-
-      if (numberQuestion >= (questions.length-1)) {
-        nextBtn.style.display = 'none';
-      } else {
-        nextBtn.style.display = '';
-      }
-
-      questionTitle.textContent = `${questions[indexQuestion].question}`;
-
-      renderAnswers(indexQuestion);
+        
     }
+
     renderQuestions(numberQuestion);
 
+    const checkAnswer = () => {
+      const obj = {};
+      const inputs = [...formAnswers.elements].filter((input) => input.checked || input.id === 'numberPhone');
+      
+      inputs.forEach((input, index) => {
+        if (numberQuestion >= 0 && numberQuestion <= questions.length - 1) {
+          obj[`${index}_${questions[numberQuestion].question}`] = input.value;
+        }
+        if (numberQuestion === questions.length) {
+          obj[`Номер телефона: `] = input.value;
+        }
+      })
+
+      finalAnswers.push(obj);
+    }
+
     nextBtn.onclick = () => {
+      checkAnswer();
       numberQuestion++;
       renderQuestions(numberQuestion);
     }
@@ -188,6 +235,12 @@ document.addEventListener('DOMContentLoaded', function() {
     prevBtn.onclick = () => {
       numberQuestion--;
       renderQuestions(numberQuestion);
+    }
+    sendBtn.onclick = () => {
+      checkAnswer();
+      numberQuestion++;
+      renderQuestions(numberQuestion);
+      console.log(finalAnswers);
     }
   }
   // console.dir(btnOpenModal);
